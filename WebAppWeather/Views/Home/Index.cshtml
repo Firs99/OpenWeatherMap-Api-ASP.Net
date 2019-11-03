@@ -1,0 +1,125 @@
+﻿@model WebAppWeather.Models.WeatherHelper
+@{
+    ViewBag.Title = "Home Page";
+}
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Weather App</title>
+
+    <!-- CSS Includes -->
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+
+    <style type="text/css">
+        .field-validation-error {
+            color: #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="col-md-6 col-md-offset-3">
+            <h1>Weather Application</h1>
+            <!-- Форма для ввода названия города. -->
+            @using (@Html.BeginForm())
+            {
+                <div class="form-group">
+                    @Html.LabelFor(m => m.InputCity)
+                    @Html.TextBoxFor(model => model.InputCity, new { @class = "form-control" })
+                    @Html.ValidationMessageFor(model => model.InputCity)
+                </div>
+                <button type="button" class="btn btn-success submit">Get Weather</button>
+            }
+            <!-- Конец формы. -->
+            <br /><br />
+
+            <!-- Блок вывода результата:
+            <Текущая погода введенного города>
+            <Таблица с прогнозом погоды в текущем городе>
+            -->
+            <div class="alert alert-warning fade">
+                <!-- <Текущая погода> -->
+                <strong><span class="alert-content"></span></strong>
+                <!--<Таблица с прогнозом погоды в текущем городе>
+                (Шаблон таблицы для формирования прогноза погоды) -->
+                <div class="table-condensed">
+                    <table class="table">
+                        <thead id="table_thead">
+                            <tr>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Temperature</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table_tbody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!--Конец блока вывода результата:-->
+        </div>
+    </div>
+
+    <!-- JS includes -->  
+    <script type="text/javascript">
+        //Отправленние введенных данных на сервер с помощью Ajax по клику кнопки на форме выше. 
+        $(document).ready(function () {
+            //Ждем когда страница будет полностью загруженна.
+            $("button").click(function () {
+                /*обрабатываем клик по кнопке
+                 * с помощью Ajax отправляем запрос на сервер, с данными введеными в input формы.
+                 * в случае успеха получаем ответ в resp.
+                 * передаем данные (resp) в функции openAlert(resp) и fillingTable(resp) для обработки входяхиъ данных.
+                 */
+                $.ajax({
+                    url: '@Url.RouteUrl(new{ action="GetWeatherForecast", controller="Home"})',
+                    data: JSON.stringify({ InputCity: $('#InputCity').val() }),
+								type: 'POST',
+								dataType: 'json',
+								contentType: "application/json; charset=utf-8",
+                    success: function (resp) {
+                        openAlert(resp);
+                        fillingTable(resp);
+                    }
+                });
+            });
+        });
+        //Конец запроса.
+
+        //в функции полученные данные заполняют .alert-content, а $('.alert').addClass('in'); отображает данный блок.
+         function openAlert(resp) {
+            $('.alert-content').text("Weather in " + resp.city.name + ", " + resp.city.country + " " + resp.list[0].main.temp + " °C");
+		    $('.alert').addClass('in');
+        }
+
+        //При изменении или ввода данных в поле с формы .alert скрывается c помощью функции closeAlert до отправки нового запроса Ajax.
+            $('#InputCity').change(closeAlert);
+            $('#InputCity').keyup(closeAlert);
+
+        //Функия для удаления видимости блока .alert.
+		function closeAlert() {
+			$('.alert').removeClass('in');
+        }
+
+        /*
+         * Функция заполнения таблицы данными, на основе полученого ответа с ajax.
+         * Перед заполнением таблицы все содержимое раннее внутри <tbody id="table_tbody"> очищается, для заполнения новыми данными.
+         * resp.cnt - кол-во элементов в списке.
+         * Переменная time служит для форматирования строки в полную дату, для дальнейшего форматирования в часы и дни.
+         */
+        function fillingTable(resp) {
+            $('#table_tbody:last').children('tr').remove();
+            for (var i = 0; i < resp.cnt; i++) {
+                var time = new Date();
+                time.setTime(Date.parse(resp.list[i].dt_txt));
+                $('#table_tbody:last').append("<tr><td>" + time.toDateString() + "</td><td>" + time.toLocaleTimeString() + "</td><td>" + resp.list[i].main.temp +" °C" + "</td></tr>");
+            }
+        }
+    </script>
+</body>
+</html>
