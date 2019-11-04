@@ -4,8 +4,7 @@ Openweathermap forecast Asp.Net MVC 5 application
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
-
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
 ## Built With
 
 * [ASP.NET](https://docs.microsoft.com/en-us/aspnet/mvc/overview/getting-started/introduction/getting-started) - The web framework used
